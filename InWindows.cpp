@@ -1,4 +1,4 @@
-#include<iostream>
+﻿#include<iostream>
 #include<stdlib.h>
 #include<math.h>
 #include<windows.h>
@@ -10,7 +10,7 @@ using namespace std;
 
 int main(){
 	
-	int tSum = 0;
+	double tSum = 0;
 	FILE *myexcel;
 	fopen_s(&myexcel, "out.txt", "w");
 	
@@ -68,17 +68,12 @@ int main(){
 				
 				if (!arrive[j]){
 					int cc = msgs[j][1] - '0';
-					if (cc==1)
+					if (cc==1)//发送资源的类型
 					{
-						double total = 0;
 						int k = j;
-						while (times[k] != 0){
-							total += times[k];
-							k++;
-						}
 						int a = msgs[j][3] - '0' - 1;
 						int b = msgs[j][5] - '0' - 1;
-						if (total > d[a][b]){
+						if ((tSum - times[j])>d[a][b]){
 							arrive[j] = true;
 							int c = (msgs[j][6] - '0') * 100 + (msgs[j][7] - '0') * 10 + (msgs[j][8] - '0');
 							current[a][b] -= c;
@@ -92,13 +87,21 @@ int main(){
 			}
 			
 			cout << endl;
-			cout << "当前状态：  " << current[0][0] << '\t' << current[1][1] << '\t' << current[2][2] <<"次数"<<i<< endl;
+			cout << "当前状态：  "<<endl;
+			for (int mm = 0; mm < 3; mm++){
+				for (int nn = 0; nn < 3; nn++)
+				{
+					cout << current[mm][nn] << "\t";
+				}
+				cout << endl;
+			}
+				cout << "次数" << i << endl;
 			if (!isPho1){
 					int a, b, c;
 					do
 					{
 						a = rand() % 3;
-					} while (current[a] == 0);
+					} while (current[a][a] == 0);
 
 
 					//a！=b
@@ -115,7 +118,7 @@ int main(){
 					t = -2 * log(R);
 					Sleep(t);
 					tSum += t;
-					times[i] = t;
+					times[i] = tSum;
 					sprintf_s(msgs[i], "01%02d%02d%03d", a + 1, b + 1, c);
 					cout << msgs[i] << endl;
 					cout << "time = " << t;
@@ -134,8 +137,8 @@ int main(){
 					t = -2 * log(R);
 					Sleep(t);
 					tSum += t;
-					times[i] = t;
-					sprintf_s(msgs[i], "02%02d02d", a, b + 1);
+					times[i] = tSum;
+					sprintf_s(msgs[i], "02%02d%02d", a, b + 1);
 					cout << msgs[i] << endl;
 					cout << "time = " << t;
 					cout << endl;
