@@ -151,6 +151,74 @@ int main(){
 		cout << "总时间" << tSum << endl;
 	}
 	
-	
+	int result[10][3][3];
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				for (int k = 0; k < 3; k++)
+				{
+					if (j == k)
+						result[i][j][k] = 100;
+					else
+						result[i][j][k] = 0;
+				}
+			}
+		}
+		//caculate photo
+		for (int i = 0; i < 10; i++)
+		{
+			int s = pho[i];
+			int start = msgs[s][5] - '0' - 1;
+			for (int j = 0; j < 60;j++ )
+			{
+				int type = msgs[j][1];
+				if (type == '1'){
+					int a = msgs[j][3] - '1';
+					int b = msgs[j][5] - '1';
+					int amount = (msgs[j][6] - '0') * 100 + (msgs[j][7] - '0') * 10 + (msgs[j][8] - '0');
+					if (times[j] < times[s] + d[start][a]){//·¢³ö
+						result[i][a][a] -= amount;
+					}
+					if (times[j] + d[a][b] < times[s] + d[start][b]){//µœŽï
+						result[i][b][b] += amount;
+					}
+					//caculate the tongdao
+					if (a == start){
+					}
+					else{
+						if ((times[j]>times[s] - d[a][start]) && (times[j] < times[s] + d[start][a])){
+							result[i][a][b] += amount;
+						}
+					}
+				}
+			}
+		}
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				for (int k = 0; k < 3; k++)
+				{
+					cout << result[i][j][k] << '\t';
+				}
+				cout << endl;
+			}
+			cout << endl;
+		}
+	}
+
+	//write
+
+	int i = 0;
+	//msgs[0]
+	for (int i = 1; i <=60; i++)
+	{
+		//Sleep(times[i] - times[i - 1]);
+		for (int j = 0; j < 5; j++)
+		{
+			//msgs[i]
+		}
+	}
 	return  0;
 }
