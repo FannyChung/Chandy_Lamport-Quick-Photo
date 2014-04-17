@@ -19,18 +19,20 @@ int main()
     key_t shm_key;
     char *buf;
     char result[10];
+    while(buf[10]=='1');
     shm_key = ftok("/tmp/shm_demo", 101); /* p2_1 */
     shm_id = shmget(shm_key, 0, 0);
     buf = (char *) shmat(shm_id, NULL, 0);
+    buf[10]='1';
     int n=0;
     while (1)
     {
-        while (*buf==NULL||(buf[0] == '0' && buf[1] == '0'))
-            ;
+
+        while(buf[10]=='1');
         memcpy(result, buf, 10);
-        buf[0] = '0';
-        buf[1] = '0';
+        buf[10]='1';
         n++;
         fprintf(stdout, "result%d: %s\n",n, result);
     }
+    return 0;
 }
