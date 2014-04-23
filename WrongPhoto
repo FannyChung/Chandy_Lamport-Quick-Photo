@@ -1,0 +1,242 @@
+
+#include <iostream>
+#include <stdlib.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sstream>
+#include <time.h>
+#include <unistd.h>
+#include <math.h>
+#include <algorithm>
+using namespace std;
+
+char msgs[60][10];
+double times[60];
+int pho[10];
+bool arrive[60];
+double d[3][3] = { { 0, 0.500, 0.300 }, { 0.400, 0, 0.550 }, { 0.350, 0.550, 0 } };
+
+//计算快照答案
+void caculatePhotoResult(){
+    int result[10][3][3];
+
+    for(int k=0; k<10; k++)
+    {
+        for(int i=0; i<3; i++)
+        {
+            for(int j=0; j<3; j++)
+            {
+                if(i==j)
+                {
+                    result[k][i][j]=100;
+                }
+                else
+                {
+                    result[k][i][j]=0;
+                }
+            }
+        }
+    }
+    cout<<" photo result is "<<endl;
+    //caculate photo
+    for (int i = 0; i < 10; i++)
+    {
+        int s = pho[i];
+        int start = msgs[s][5] - '0' - 1;
+        for (int j = 0; j < 60; j++ )
+        {
+            int type = msgs[j][1];
+            if (type == '1')
+            {
+                int a = msgs[j][3] - '1';
+                int b = msgs[j][5] - '1';
+                int amount = (msgs[j][6] - '0') * 100 + (msgs[j][7] - '0') * 10 + (msgs[j][8] - '0');
+                if (times[j] < times[s] + d[start][a]) //send
+                {
+                    result[i][a][a] -= amount;
+                }
+                if (times[j] + d[a][b] < times[s] + d[start][b]) //receive
+                {
+                    result[i][b][b] += amount;
+                }
+                //caculate the tongdao
+                if (!(a == start))
+                {
+                    if ((times[j]>times[s] - d[a][start]) && (times[j] < times[s] + d[start][a]))
+                    {
+                        result[i][a][b] += amount;
+                    }
+                }
+            }
+        }
+        int sum=0;
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                sum+=result[i][j][k];
+                cout << result[i][j][k] << '\t';
+            }
+            cout << endl;
+        }
+        cout << endl;
+        if(sum!=300){
+            cout<<"wrong!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+        }
+    }
+}
+void genRand(){
+    double tSum=0;
+    double R;
+    double t;
+    int current[3][3] = { { 100, 0, 0 }, { 0, 100, 0 }, { 0, 0, 100 } };
+
+        for (int i = 0; i < 10;)
+        {
+            int c = rand() % 60;
+            bool tag = true;
+            for (int j = 0; j < i; j++)
+            {
+                if (pho[j] == c)
+                {
+                    tag = false;
+                    break;
+                }
+            }
+            if (tag)
+            {
+                pho[i] = c;
+                i++;
+            }
+        }
+        sort(pho,pho+10);
+        tSum = 0;
+        int pp=0;
+        int i = 0;
+        while (i<60)
+        {
+            //display currrent state
+            cout << endl;
+            cout << "当前状态：  "<<endl;
+            for (int mm = 0; mm < 3; mm++)
+            {
+                for (int nn = 0; nn < 3; nn++)
+                {
+                    cout << current[mm][nn] << "\t";
+                }
+                cout << endl;
+            }
+            cout << "次数： " << i << endl;
+            //ziyuan chuandi
+            if (i!=pho[pp])
+            {
+                int a, b, c;
+                do
+                {
+                    a = rand() % 3;
+                }
+                while (current[a][a] == 0);
+                //a！=b
+                do
+                {
+                    b = rand() % 3;
+                }
+                while (a == b);
+                c = (rand() % (current[a][a])) + 1;
+
+                current[a][a] -= c;
+                current[a][b] += c;
+                sprintf(msgs[i], "01%02d%02d%03d", a + 1, b + 1, c);
+            }
+            else
+            {
+                pp++;
+                int b;
+                b = rand() % 3;
+
+                sprintf(msgs[i], "02%02d%02d", pp, b + 1);
+                //fprintf(myexcel, "%f\n", t);
+            }
+            for (int j = 0; j < i; j++)
+            {
+                if (!arrive[j])
+                {
+                    int cc = msgs[j][1] - '0';
+                    if (cc==1)
+                    {
+                        int a = msgs[j][3] - '0' - 1;
+                        int b = msgs[j][5] - '0' - 1;
+                        if ((tSum - times[j])>d[a][b])
+                        {
+                            arrive[j] = true;
+                            int c = (msgs[j][6] - '0') * 100 + (msgs[j][7] - '0') * 10 + (msgs[j][8] - '0');
+                            current[a][b] -= c;
+                            current[b][b] += c;
+                            cout << a + 1 << " arrives at " << b + 1 << " amount: " << c << endl;
+                            cout << endl;
+                        }
+                    }
+                }
+            }
+            //gen time
+            R = ((double)rand()) / RAND_MAX;
+            t = -2 * log(R);
+            if(t<0.005){
+                t=0.005;
+                }
+            tSum += t;
+            times[i] = tSum;
+            cout << "time = " << t<<endl;
+            cout << msgs[i] << endl;
+
+            //ziyuan daoda
+
+            i++;
+        }
+}
+
+int main()
+{
+    for (int i = 0; i < 60; i++)
+    {
+        arrive[i] = false;
+        times[i] = 0;
+    }
+    int seed;
+    cin>>seed;
+    srand(seed);
+
+    //generate rand
+    genRand();
+
+
+    //create neicun, init to 0
+
+
+    //write  &  genresult
+    for(int i=0; i<60; i++)
+    {
+        double t;
+        if(i==0){
+            t=times[i];
+        }
+        t=times[i]-times[i-1];
+
+        //sleep(t);
+        cout<<" t= "<<times[i];
+        if(i!=1){
+            cout<<" - "<<times[i-1];
+        }
+        cout<<" = "<<t<<endl;
+        cout<<i<<" "<<msgs[i]<<endl;
+    }
+
+    caculatePhotoResult();
+    cout<<times[59]<<endl;
+    return  0;
+}
+
+
