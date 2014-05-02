@@ -1,0 +1,52 @@
+#include <iostream>
+#include <stdlib.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sstream>
+#include <time.h>
+#include <unistd.h>
+#include <math.h>
+#include <algorithm>
+#include <semaphore.h>
+using namespace std;
+char SEM_NAME[10]= {"PV2"};
+
+
+int main(int argc, char const *argv[])
+{
+        cout<<"I m P2_2"<<endl;
+
+    int shm_id;
+    key_t shm_key;
+    char *buf;
+    char result[10];
+    while(buf[10]=='1');
+    shm_key = ftok("/tmp/shm_demo", 102); /* p2_1 */
+    shm_id = shmget(shm_key, 0, 0);
+    buf = (char *) shmat(shm_id, NULL, 0);
+    sem_t *mutex;
+    mutex = sem_open(SEM_NAME,0,0644,0);
+    if(mutex == SEM_FAILED)
+    {
+        perror("reader:unable to execute semaphore");
+        sem_close(mutex);
+        exit(-1);
+    }
+    int n=0;
+    while (n<60)
+    {
+        sem_wait(mutex);
+        memcpy(result, buf, 10);
+        sem_post(mutex);
+        fprintf(stdout, "102  result%d: %s\n",n, result);
+        n++;
+    }
+    cout<<"I m P2_2"<<endl;
+    sem_close(mutex);
+    shmctl(shm_id, IPC_RMID, 0);
+    return 0;
+}
+
